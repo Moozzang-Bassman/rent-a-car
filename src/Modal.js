@@ -15,46 +15,62 @@ function Modal({ setIsModalOpen, detailInfo }) {
       >
         <img width="100%" src={detailInfo && detailInfo.carImage}></img>
         <h3>{detailInfo && detailInfo.carClassName}</h3>
-        <Paragraph>{detailInfo && detailInfo.maker}</Paragraph>
-        <Paragraph>{detailInfo && detailInfo.carModel}</Paragraph>
-        <Paragraph>{detailInfo && detailInfo.fuel}</Paragraph>
-        <Paragraph>{detailInfo && detailInfo.gearbox}</Paragraph>
-        <Paragraph>{detailInfo && detailInfo.capacity}</Paragraph>
+        <p>{detailInfo && detailInfo.maker}</p>
+        <p>{detailInfo && detailInfo.carModel}</p>
+        <p>{detailInfo && detailInfo.fuel}</p>
+        <p>{detailInfo && detailInfo.gearbox}</p>
+        <p>{detailInfo && detailInfo.capacity}인승</p>
         <h3>안전옵션</h3>
         {detailInfo?.safetyOption.map((item) => {
-          return <Paragraph>{`-${item}`}</Paragraph>;
+          return <p>{`-${item}`}</p>;
         })}
         <h3>편의옵션</h3>
         {detailInfo?.additionalOption.map((item) => {
-          return <Paragraph>{`-${item}`}</Paragraph>;
+          return <p>{`-${item}`}</p>;
         })}
+        <XButton
+          onClick={() => {
+            setIsModalOpen(false);
+          }}
+        >
+          X
+        </XButton>
       </WhiteBox>
     </Background>
   );
 }
 
 export default Modal;
+const XButton = styled.button`
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  border-radius: 50%;
+  width: 28px;
+  height: 28px;
+  border: 2px solid;
+  background-color: inherit;
+`;
 const Paragraph = styled.p`
   margin: 0;
   white-space: nowrap;
 `;
 
 const Background = styled.div`
-  width: 100%;
   height: 100%;
   position: fixed;
   background: rgba(0, 0, 0, 0.5);
   z-index: 5;
-  padding: 42px 36px;
+  padding: 60px 36px;
   display: flex;
   justify-content: center;
   box-sizing: border-box;
 `;
 const WhiteBox = styled.div`
   background: white;
+  position: relative;
 
-  padding: 30px;
-  /* width: 71%; */
-  /* height: 82%; */
+  padding: 28px;
+
   overflow-y: auto;
 `;

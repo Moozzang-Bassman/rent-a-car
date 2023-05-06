@@ -1,20 +1,18 @@
 import './App.css';
-import styled, { createGlobalStyle } from 'styled-components';
+import styled from 'styled-components';
 import axios from 'axios';
 import { useEffect } from 'react';
 import { useState } from 'react';
 import Modal from './Modal';
+import { createGlobalStyle } from 'styled-components';
 
 function App() {
   const [carList, setCarList] = useState(5);
   const [slide, setSlide] = useState(0);
-  const [showMoreNumber, setShowMoreNumber] = useState(5);
-  const [data, setData] = useState();
-  const [detailInfo, setDetailInfo] = useState();
+  const [data, setData] = useState(null);
+  const [detailInfo, setDetailInfo] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  console.log(carList, data?.length);
 
-  const imageMoveHandler = (e) => {};
   const priceWithComma = (num) => {
     const value = Math.round(num / 100) * 100;
     return value.toLocaleString();
@@ -48,116 +46,137 @@ function App() {
       setDetailInfo(...response.data);
     });
   };
+
   useEffect(() => {
-    axios.get('http://localhost:8080/carClasses').then((response) => {
-      const newArr = response.data.map((item) => {
-        return {
-          ...item,
-          price: priceWithComma(item.price),
-          drivingDistance: drivingDistanceToKorean(item.drivingDistance),
-          regionGroups: item.regionGroups.join(' ').replaceAll(' ', ', '),
-        };
-      });
-      setData(newArr);
-    });
+    const fetchData = async () => {
+      try {
+        const response = await axios.get('http://localhost:8080/carClasses');
+        const newArr = response.data.map((item) => {
+          return {
+            ...item,
+            price: priceWithComma(item.price),
+            drivingDistance: drivingDistanceToKorean(item.drivingDistance),
+            regionGroups: item.regionGroups.join(' ').replaceAll(' ', ', '),
+          };
+        });
+        setData(newArr);
+      } catch (error) {
+        console.error(error);
+      }
+    };
+    fetchData();
   }, []);
+
   const specialPriceItem = data?.filter((item) => {
     if (item.carTypeTags.includes('특가')) {
       return item;
     }
   });
+
   const specialPriceLength = specialPriceItem?.length;
 
   return (
-    <Layout>
-      {isModalOpen ? (
-        <Modal setIsModalOpen={setIsModalOpen} detailInfo={detailInfo}></Modal>
-      ) : (
-        ''
-      )}
-      <Box onMouseMove={imageMoveHandler} onTouchMove={imageMoveHandler}>
-        <TitleBox>
-          <Title>차량 리스트</Title>
-        </TitleBox>
-        <div>
-          <SubTitle>특가 차량</SubTitle>
-          <SlideBoxContainer
-            slide={slide}
-            specialPriceLength={specialPriceLength}
-          >
-            {specialPriceItem?.map(() => {
-              return <SlideBox></SlideBox>;
-            })}
-          </SlideBoxContainer>
-        </div>
-        <button
-          onClick={() => {
-            if (slide < -(300 * (specialPriceLength - 2))) {
-              return;
-            }
-            setSlide(slide - 300);
-          }}
-        >
-          슬라이드+
-        </button>
-        <button
-          onClick={() => {
-            if (slide === 0) {
-              return;
-            }
-            setSlide(slide + 300);
-          }}
-        >
-          슬라이드-
-        </button>
-        <div>
-          <SubTitle>모든 차량</SubTitle>
-          <div
-            style={{ display: 'flex', flexDirection: 'column', gap: '32px' }}
-          >
-            {data?.slice(0, carList).map((item) => {
-              return (
-                <CardBox
-                  key={item.carClassId}
-                  onClick={() => cardBoxClickHandler(item.carClassId)}
-                >
-                  <CardImage src={item.image}></CardImage>
-                  <CardDesc>
-                    <NonameWrapper>
-                      <div>
-                        <Paragraph>{item.carClassName}</Paragraph>
-                        <Paragraph>{item.price}원</Paragraph>
-                      </div>
-                      <TagWrapper>
-                        {item.carTypeTags.map((item, index) => {
-                          return <Tag key={item[index]}>{item}</Tag>;
-                        })}
-                      </TagWrapper>
-                    </NonameWrapper>
-                    <Paragraph>
-                      {`${item.year}년 | ${item.drivingDistance}km | ${item.regionGroups}`}
-                    </Paragraph>
-                  </CardDesc>
-                </CardBox>
-              );
-            })}
-          </div>
-        </div>
-        <ButtonBox>
-          {carList < data?.length ? (
-            <Button
-              onClick={() => {
-                setCarList(carList + 5);
-              }}
+    <>
+      <GlobalStyle isModalOpen={isModalOpen} />
+      <Layout>
+        {isModalOpen ? (
+          <Modal
+            setIsModalOpen={setIsModalOpen}
+            detailInfo={detailInfo}
+          ></Modal>
+        ) : (
+          ''
+        )}
+        <Box>
+          <TitleBox>
+            <Title>차량 리스트</Title>
+          </TitleBox>
+          <div>
+            <SubTitle>특가 차량</SubTitle>
+            <SlideBoxContainer
+              slide={slide}
+              specialPriceLength={specialPriceLength}
             >
-              더보기
-            </Button>
-          ) : (
-            ''
-          )}
-        </ButtonBox>
-      </Box>
-    </Layout>
+              {specialPriceItem?.map(() => {
+                return <SlideBox></SlideBox>;
+              })}
+            </SlideBoxContainer>
+          </div>
+          <button
+            onClick={() => {
+              if (slide < -(300 * (specialPriceLength - 2))) {
+                return;
+              }
+              setSlide(slide - 300);
+            }}
+          >
+            슬라이드+
+          </button>
+          <button
+            onClick={() => {
+              if (slide === 0) {
+                return;
+              }
+              setSlide(slide + 300);
+            }}
+          >
+            슬라이드-
+          </button>
+          <div>
+            <SubTitle>모든 차량</SubTitle>
+            <div
+              style={{ display: 'flex', flexDirection: 'column', gap: '32px' }}
+            >
+              {data?.slice(0, carList).map((item) => {
+                return (
+                  <CardBox
+                    key={item.carClassId}
+                    onClick={() => cardBoxClickHandler(item.carClassId)}
+                  >
+                    <CardImage src={item.image}></CardImage>
+                    <CardDesc>
+                      <NonameWrapper>
+                        <div>
+                          <p>{item.carClassName}</p>
+                          <p>{item.price}원</p>
+                        </div>
+                        <TagWrapper>
+                          {item.carTypeTags.map((item, index) => {
+                            return <Tag key={[index]}>{item}</Tag>;
+                          })}
+                        </TagWrapper>
+                      </NonameWrapper>
+                      <p>
+                        {`${item.year}년 | ${item.drivingDistance}km | ${item.regionGroups}`}
+                      </p>
+                    </CardDesc>
+                  </CardBox>
+                );
+              })}
+            </div>
+          </div>
+          <ButtonBox>
+            {carList < data?.length ? (
+              <Button
+                onClick={() => {
+                  setCarList(carList + 5);
+                }}
+              >
+                더보기
+              </Button>
+            ) : (
+              <Button
+                onClick={() => {
+                  setCarList(5);
+                }}
+              >
+                더 없으니까 닫기
+              </Button>
+            )}
+          </ButtonBox>
+        </Box>
+      </Layout>
+    </>
   );
 }
 
@@ -183,7 +202,6 @@ const SlideBox = styled.div`
   width: 280px;
   height: 24vh;
   box-sizing: border-box;
-  /* margin-right: 20px; */
 `;
 
 const NonameWrapper = styled.div`
@@ -207,10 +225,6 @@ const Tag = styled.div`
   display: flex;
   align-items: center;
   justify-content: center;
-`;
-const Paragraph = styled.p`
-  margin: 0;
-  white-space: nowrap;
 `;
 const CardDesc = styled.div`
   margin-top: 48px;
@@ -244,7 +258,6 @@ const Layout = styled.div`
   margin: 0;
   display: flex;
   justify-content: center;
-  background-color: green;
 `;
 const Box = styled.div`
   box-sizing: border-box;
@@ -252,5 +265,15 @@ const Box = styled.div`
   max-width: 420px;
   padding: 24px;
   background-color: yellowgreen;
+  position: relative;
   overflow: hidden;
 `;
+const GlobalStyle = createGlobalStyle`
+  body {
+    overflow: ${(props) => (props.isModalOpen ? 'hidden' : 'auto')}
+  }
+  p{
+    margin: 0;
+  /* white-space: nowrap; */
+  }
+  `;
