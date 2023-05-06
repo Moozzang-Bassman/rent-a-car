@@ -5,19 +5,53 @@ import { useEffect } from 'react';
 import { useState } from 'react';
 
 function App() {
+  const [showMoreNumber, setShowMoreNumber] = useState(5);
   const [data, setData] = useState();
   const imageMoveHandler = (e) => {};
+  const priceWithComma = (num) => {
+    const value = Math.round(num / 100) * 100;
+    return value.toLocaleString();
+  };
+  const drivingDistanceToKorean = (num) => {
+    const arr = [];
+    if (num === 0) {
+      return;
+    }
+    if (`${num}`.length > 4) {
+      arr.push(`${Math.floor(num / 10000)}만`);
+    }
+    if (`${num}`.length > 3) {
+      if (Math.floor((num % 10000) / 1000) !== 0) {
+        arr.push(`${Math.floor((num % 10000) / 1000)}천`);
+        if (Math.floor((num % 10000) % 1000)) {
+          arr.push(`${Math.floor((num % 10000) % 1000)}`);
+        }
+      }
+    }
+    if (`${num}`.length < 4) {
+      arr.push(`${num}`);
+    }
+    return arr.join('');
+  };
   const showMoreButtonClickHandler = () => {
-    console.log('더보기 기능');
+    console.log(showMoreNumber);
+    setShowMoreNumber(showMoreNumber + 5);
+    console.log(showMoreNumber);
   };
   useEffect(() => {
-    axios.get('http://localhost:8080/carClasses').then((data) => {
-      setData(data.data);
+    axios.get('http://localhost:8080/carClasses').then((response) => {
+      const newArr = response.data.map((item) => {
+        return {
+          ...item,
+          price: priceWithComma(item.price),
+          drivingDistance: drivingDistanceToKorean(item.drivingDistance),
+          regionGroups: item.regionGroups.join(' ').replaceAll(' ', ', '),
+        };
+      });
+      setData(newArr);
     });
   }, []);
-  // const 글자길이측정용 = data?.map((item) => {
-  //   return `${item.year}년 | ${item.}`
-  // });
+  console.log(data);
 
   return (
     <Layout>
@@ -38,18 +72,22 @@ function App() {
                   console.log(item.carClassId);
                 }}
               >
-                <CardImage></CardImage>
+                <CardImage src={item.image}></CardImage>
                 <CardDesc>
-                  <div>
-                    <Paragraph>{item.carClassName}</Paragraph>
-                    <Paragraph>{item.price}원</Paragraph>
-                    <Paragraph>2019년|5만km|서울,부산...</Paragraph>
-                  </div>
-                  <TagWrapper>
-                    {item.carTypeTags.map((item) => {
-                      return <Tag>{item}</Tag>;
-                    })}
-                  </TagWrapper>
+                  <NonameWrapper>
+                    <div>
+                      <Paragraph>{item.carClassName}</Paragraph>
+                      <Paragraph>{item.price}원</Paragraph>
+                    </div>
+                    <TagWrapper>
+                      {item.carTypeTags.map((item, index) => {
+                        return <Tag key={item[index]}>{item}</Tag>;
+                      })}
+                    </TagWrapper>
+                  </NonameWrapper>
+                  <Paragraph>
+                    {`${item.year}년 | ${item.drivingDistance}km | ${item.regionGroups}`}
+                  </Paragraph>
                 </CardDesc>
               </CardBox>
             );
@@ -64,6 +102,10 @@ function App() {
 }
 
 export default App;
+const NonameWrapper = styled.div`
+  display: flex;
+  justify-content: space-between;
+`;
 const ButtonBox = styled.div`
   display: flex;
   justify-content: center;
@@ -88,11 +130,9 @@ const Paragraph = styled.p`
 `;
 const CardDesc = styled.div`
   margin-top: 32px;
-  display: flex;
-  justify-content: space-between;
 `;
 const CardImage = styled.img`
-  width: 55%;
+  /* width: 200px; */
   height: 150px;
   background-color: aliceblue;
   margin: 0 auto;
@@ -106,6 +146,7 @@ const CardBox = styled.div`
   padding: 16px 24px;
   display: flex;
   flex-direction: column;
+  cursor: pointer;
 `;
 const SubTitle = styled.h2`
   font-weight: 500;
