@@ -1,17 +1,22 @@
 import './App.css';
-import styled from 'styled-components';
+import styled, { createGlobalStyle } from 'styled-components';
 import axios from 'axios';
 import { useEffect } from 'react';
 import { useState } from 'react';
+import Modal from './Modal';
 
 function App() {
   const [showMoreNumber, setShowMoreNumber] = useState(5);
   const [data, setData] = useState();
+  const [detailInfo, setDetailInfo] = useState();
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
   const imageMoveHandler = (e) => {};
   const priceWithComma = (num) => {
     const value = Math.round(num / 100) * 100;
     return value.toLocaleString();
   };
+
   const drivingDistanceToKorean = (num) => {
     const arr = [];
     if (num === 0) {
@@ -33,10 +38,16 @@ function App() {
     }
     return arr.join('');
   };
-  const showMoreButtonClickHandler = () => {
-    console.log(showMoreNumber);
-    setShowMoreNumber(showMoreNumber + 5);
-    console.log(showMoreNumber);
+  // const showMoreButtonClickHandler = () => {
+  //   console.log(showMoreNumber);
+  //   setShowMoreNumber(showMoreNumber + 5);
+  //   console.log(showMoreNumber);
+  // };
+  const cardBoxClickHandler = (id) => {
+    setIsModalOpen(true);
+    axios.get(`http://localhost:8080/carClasses/${id}`).then((response) => {
+      setDetailInfo(...response.data);
+    });
   };
   useEffect(() => {
     axios.get('http://localhost:8080/carClasses').then((response) => {
@@ -51,10 +62,14 @@ function App() {
       setData(newArr);
     });
   }, []);
-  console.log(data);
 
   return (
     <Layout>
+      {isModalOpen ? (
+        <Modal setIsModalOpen={setIsModalOpen} detailInfo={detailInfo}></Modal>
+      ) : (
+        ''
+      )}
       <Box onMouseMove={imageMoveHandler} onTouchMove={imageMoveHandler}>
         <TitleBox>
           <Title>차량 리스트</Title>
@@ -68,9 +83,7 @@ function App() {
             return (
               <CardBox
                 key={item.carClassId}
-                onClick={() => {
-                  console.log(item.carClassId);
-                }}
+                onClick={() => cardBoxClickHandler(item.carClassId)}
               >
                 <CardImage src={item.image}></CardImage>
                 <CardDesc>
@@ -94,7 +107,7 @@ function App() {
           })}
         </div>
         <ButtonBox>
-          <Button onClick={showMoreButtonClickHandler}>더보기</Button>
+          <Button>더보기</Button>
         </ButtonBox>
       </Box>
     </Layout>
@@ -102,6 +115,7 @@ function App() {
 }
 
 export default App;
+
 const NonameWrapper = styled.div`
   display: flex;
   justify-content: space-between;
@@ -129,11 +143,10 @@ const Paragraph = styled.p`
   white-space: nowrap;
 `;
 const CardDesc = styled.div`
-  margin-top: 32px;
+  margin-top: 48px;
 `;
 const CardImage = styled.img`
-  /* width: 200px; */
-  height: 150px;
+  height: 130px;
   background-color: aliceblue;
   margin: 0 auto;
 `;
@@ -168,7 +181,6 @@ const Box = styled.div`
   box-sizing: border-box;
   width: 100%;
   max-width: 420px;
-  /* height: 100vh; */
   padding: 24px;
   background-color: yellowgreen;
 `;
