@@ -2,7 +2,6 @@ import React from 'react';
 import { useEffect } from 'react';
 import styled from 'styled-components';
 function Modal({ setIsModalOpen, detailInfo }) {
-  console.log(detailInfo);
   return (
     <Background
       onClick={() => {
@@ -15,19 +14,19 @@ function Modal({ setIsModalOpen, detailInfo }) {
         }}
       >
         <img width="100%" src={detailInfo && detailInfo.carImage}></img>
-        <p>{detailInfo && detailInfo.carClassName}</p>
-        <p>{detailInfo && detailInfo.maker}</p>
-        <p>{detailInfo && detailInfo.carModel}</p>
-        <p>{detailInfo && detailInfo.fuel}</p>
-        <p>{detailInfo && detailInfo.gearbox}</p>
-        <p>{detailInfo && detailInfo.capacity}</p>
+        <h3>{detailInfo && detailInfo.carClassName}</h3>
+        <Paragraph>{detailInfo && detailInfo.maker}</Paragraph>
+        <Paragraph>{detailInfo && detailInfo.carModel}</Paragraph>
+        <Paragraph>{detailInfo && detailInfo.fuel}</Paragraph>
+        <Paragraph>{detailInfo && detailInfo.gearbox}</Paragraph>
+        <Paragraph>{detailInfo && detailInfo.capacity}</Paragraph>
         <h3>안전옵션</h3>
         {detailInfo?.safetyOption.map((item) => {
-          return <p>{`-${item}`}</p>;
+          return <Paragraph>{`-${item}`}</Paragraph>;
         })}
         <h3>편의옵션</h3>
         {detailInfo?.additionalOption.map((item) => {
-          return <p>{`-${item}`}</p>;
+          return <Paragraph>{`-${item}`}</Paragraph>;
         })}
       </WhiteBox>
     </Background>
@@ -35,6 +34,10 @@ function Modal({ setIsModalOpen, detailInfo }) {
 }
 
 export default Modal;
+const Paragraph = styled.p`
+  margin: 0;
+  white-space: nowrap;
+`;
 
 const Background = styled.div`
   width: 100%;
@@ -42,15 +45,16 @@ const Background = styled.div`
   position: fixed;
   background: rgba(0, 0, 0, 0.5);
   z-index: 5;
-  padding: 30px;
+  padding: 42px 36px;
   display: flex;
   justify-content: center;
+  box-sizing: border-box;
 `;
 const WhiteBox = styled.div`
   background: white;
 
   padding: 30px;
-  width: 71%;
-  height: 82%;
+  /* width: 71%; */
+  /* height: 82%; */
   overflow-y: auto;
 `;
