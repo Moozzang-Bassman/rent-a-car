@@ -51,12 +51,9 @@ const XButton = styled.button`
   border: 2px solid;
   background-color: inherit;
 `;
-const Paragraph = styled.p`
-  margin: 0;
-  white-space: nowrap;
-`;
 
 const Background = styled.div`
+  width: 100%;
   height: 100%;
   position: fixed;
   background: rgba(0, 0, 0, 0.5);
@@ -73,4 +70,5 @@ const WhiteBox = styled.div`
   padding: 28px;
 
   overflow-y: auto;
+  max-width: 260px;
 `;

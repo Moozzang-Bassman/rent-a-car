@@ -7,17 +7,23 @@ import Modal from './Modal';
 import { createGlobalStyle } from 'styled-components';
 
 function App() {
+  const slideBoxWidth = 280;
+  const globalPadding = 24;
+  const [touchStartX, setTouchStartX] = useState(0);
+  const [touchMoveDistance, setTouchMoveDistance] = useState(0);
+  const [isDragStart, setIsDragStart] = useState(false);
   const [carList, setCarList] = useState(5);
   const [slide, setSlide] = useState(0);
   const [data, setData] = useState(null);
   const [detailInfo, setDetailInfo] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  console.log(touchMoveDistance);
 
   const priceWithComma = (num) => {
     const value = Math.round(num / 100) * 100;
     return value.toLocaleString();
   };
-
+  // console.log(slide);
   const drivingDistanceToKorean = (num) => {
     const arr = [];
     if (num === 0) {
@@ -40,6 +46,7 @@ function App() {
     return arr.join('');
   };
 
+  // async/await 로 바꾸자
   const cardBoxClickHandler = (id) => {
     setIsModalOpen(true);
     axios.get(`http://localhost:8080/carClasses/${id}`).then((response) => {
@@ -66,7 +73,7 @@ function App() {
     };
     fetchData();
   }, []);
-
+  // 특가 차량 뽑아냄
   const specialPriceItem = data?.filter((item) => {
     if (item.carTypeTags.includes('특가')) {
       return item;
@@ -75,9 +82,33 @@ function App() {
 
   const specialPriceLength = specialPriceItem?.length;
 
+  const touchStartHandler = (e) => {
+    setIsDragStart(true);
+    setTouchStartX(e.targetTouches[0].clientX);
+    setTouchMoveDistance(slide);
+    console.log(slide);
+  };
+  const touchMoveHandler = (e) => {
+    setTouchMoveDistance(slide + (e.targetTouches[0].clientX - touchStartX));
+  };
+  const touchEndHandler = (e) => {
+    setIsDragStart(false);
+    if (
+      touchMoveDistance <= 0 &&
+      touchMoveDistance > (specialPriceLength - 1) * -300
+    ) {
+      if (e.changedTouches[0].clientX - touchStartX < -60) {
+        setSlide(slide - 300);
+      } else if (e.changedTouches[0].clientX - touchStartX > 60) {
+        setSlide(slide + 300);
+      }
+    }
+  };
+
   return (
     <>
       <GlobalStyle isModalOpen={isModalOpen} />
+
       <Layout>
         {isModalOpen ? (
           <Modal
@@ -88,40 +119,85 @@ function App() {
           ''
         )}
         <Box>
+          <button
+            onClick={() => {
+              setIsDragStart(false);
+              setTouchMoveDistance(touchMoveDistance + -300);
+            }}
+          >
+            오른쪽 (이지만 왼쪽으로가는중)
+          </button>
           <TitleBox>
             <Title>차량 리스트</Title>
           </TitleBox>
+          {/* <div> */}
           <div>
             <SubTitle>특가 차량</SubTitle>
-            <SlideBoxContainer
-              slide={slide}
-              specialPriceLength={specialPriceLength}
-            >
-              {specialPriceItem?.map(() => {
-                return <SlideBox></SlideBox>;
-              })}
-            </SlideBoxContainer>
           </div>
-          <button
-            onClick={() => {
-              if (slide < -(300 * (specialPriceLength - 2))) {
-                return;
-              }
-              setSlide(slide - 300);
-            }}
+          <SlideBoxContainer
+            id="slide-container"
+            specialPriceLength={specialPriceLength}
+            slide={slide}
+            touchMoveDistance={touchMoveDistance}
+            slideBoxWidth={slideBoxWidth}
+            isDragStart={isDragStart}
           >
-            슬라이드+
-          </button>
-          <button
-            onClick={() => {
-              if (slide === 0) {
-                return;
-              }
-              setSlide(slide + 300);
-            }}
-          >
-            슬라이드-
-          </button>
+            {specialPriceItem?.map((item, index) => {
+              return (
+                <SlideBox
+                  slideBoxWidth={slideBoxWidth}
+                  onTouchStart={touchStartHandler}
+                  onTouchMove={touchMoveHandler}
+                  onTouchEnd={touchEndHandler}
+                >
+                  {index}
+                </SlideBox>
+              );
+            })}
+          </SlideBoxContainer>
+          {/* </div> */}
+          {/* <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+            <button
+              onClick={() => {
+                if (slide < -(300 * (specialPriceLength - 2))) {
+                  return;
+                }
+                if (클릭횟수 < specialPriceItem.length) {
+                  set클릭횟수(클릭횟수 + 1);
+                }
+                if (클릭횟수 === 0) {
+                  setSlide(slide - 270);
+                } else if (클릭횟수 === specialPriceItem.length - 2) {
+                  setSlide(slide - 270);
+                } else {
+                  setSlide(slide - 300);
+                }
+              }}
+            >
+              슬라이드+
+            </button>
+            <button
+              onClick={() => {
+                if (클릭횟수 <= 0) {
+                  return;
+                }
+                set클릭횟수(클릭횟수 - 1);
+                if (slide >= 0) {
+                  return;
+                }
+                setSlide(slide + 300);
+                if (클릭횟수 === 1) {
+                  setSlide(slide + 270);
+                }
+                if (클릭횟수 === specialPriceItem.length - 1) {
+                  setSlide(slide + 270);
+                }
+              }}
+            >
+              슬라이드-
+            </button>
+          </div> */}
+
           <div>
             <SubTitle>모든 차량</SubTitle>
             <div
@@ -183,23 +259,34 @@ function App() {
 export default App;
 const SlideBoxContainer = styled.div`
   /* 박스 갯수마다 300px씩 */
-  /* width: 3600px; */
-  width: ${(props) => `${props.specialPriceLength * 300}px`};
+  /* width: 1000vw; */
+  width: ${(props) =>
+    `${
+      props.specialPriceLength * props.slideBoxWidth +
+      (props.specialPriceLength - 1) * 20
+    }px`};
+
   display: flex;
-  box-sizing: border-box;
+  /* padding: 24px; */
 
   /* 300px씩 움직인다 */
   /* slidebox 너비 280px + gap 20px */
+  transform: ${(props) =>
+    props.isDragStart
+      ? `translateX(${props.touchMoveDistance}px)`
+      : `translateX(${props.slide}px)`};
+  /* transition: transform 1s; */
+  transition: ${(props) => (props.isDragStart ? '' : 'transform .5s')};
 
-  /* transform: translateX(-3000px); */
-  transform: ${(props) => `translateX(${props.slide}px)`};
   gap: 20px;
-  transition: transform 1s;
+
   background-color: aqua;
 `;
 const SlideBox = styled.div`
   background-color: blue;
-  width: 280px;
+  /* width: 100vw; */
+  min-width: ${(props) => `${props.slideBoxWidth}px`};
+
   height: 24vh;
   box-sizing: border-box;
 `;
@@ -267,13 +354,13 @@ const Box = styled.div`
   background-color: yellowgreen;
   position: relative;
   overflow: hidden;
+  /* overflow-x: auto; */
 `;
 const GlobalStyle = createGlobalStyle`
   body {
     overflow: ${(props) => (props.isModalOpen ? 'hidden' : 'auto')}
   }
-  p{
+  p {
     margin: 0;
-  /* white-space: nowrap; */
   }
   `;
