@@ -8,22 +8,44 @@ import { createGlobalStyle } from 'styled-components';
 
 function App() {
   const slideBoxWidth = 280;
-  const globalPadding = 24;
+
   const [touchStartX, setTouchStartX] = useState(0);
   const [touchMoveDistance, setTouchMoveDistance] = useState(0);
   const [isDragStart, setIsDragStart] = useState(false);
   const [carList, setCarList] = useState(5);
   const [slide, setSlide] = useState(0);
-  const [data, setData] = useState(null);
+  const [data, setData] = useState([]);
   const [detailInfo, setDetailInfo] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  console.log(touchMoveDistance);
+  const [showList, setShowList] = useState([]);
+
+  const fetchData = async () => {
+    try {
+      const response = await axios.get('http://localhost:8080/carClasses');
+      const newArr = response.data.map((item) => {
+        return {
+          ...item,
+          price: priceWithComma(item.price),
+          drivingDistance: drivingDistanceToKorean(item.drivingDistance),
+          regionGroups: item.regionGroups.join(' ').replaceAll(' ', ', '),
+        };
+      });
+      const newArr2 = newArr.slice(0, carList);
+      setShowList(newArr2);
+      setData(newArr);
+    } catch (error) {
+      console.error(error);
+    }
+  };
+  useEffect(() => {
+    fetchData();
+  }, []);
 
   const priceWithComma = (num) => {
     const value = Math.round(num / 100) * 100;
     return value.toLocaleString();
   };
-  // console.log(slide);
+
   const drivingDistanceToKorean = (num) => {
     const arr = [];
     if (num === 0) {
@@ -53,26 +75,6 @@ function App() {
       setDetailInfo(...response.data);
     });
   };
-
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const response = await axios.get('http://localhost:8080/carClasses');
-        const newArr = response.data.map((item) => {
-          return {
-            ...item,
-            price: priceWithComma(item.price),
-            drivingDistance: drivingDistanceToKorean(item.drivingDistance),
-            regionGroups: item.regionGroups.join(' ').replaceAll(' ', ', '),
-          };
-        });
-        setData(newArr);
-      } catch (error) {
-        console.error(error);
-      }
-    };
-    fetchData();
-  }, []);
   // 특가 차량 뽑아냄
   const specialPriceItem = data?.filter((item) => {
     if (item.carTypeTags.includes('특가')) {
@@ -80,13 +82,12 @@ function App() {
     }
   });
 
-  const specialPriceLength = specialPriceItem?.length;
+  let specialPriceLength = specialPriceItem?.length;
 
   const touchStartHandler = (e) => {
     setIsDragStart(true);
     setTouchStartX(e.targetTouches[0].clientX);
     setTouchMoveDistance(slide);
-    console.log(slide);
   };
   const touchMoveHandler = (e) => {
     setTouchMoveDistance(slide + (e.targetTouches[0].clientX - touchStartX));
@@ -97,12 +98,45 @@ function App() {
       touchMoveDistance <= 0 &&
       touchMoveDistance > (specialPriceLength - 1) * -300
     ) {
-      if (e.changedTouches[0].clientX - touchStartX < -60) {
+      if (e.changedTouches[0].clientX - touchStartX < -50) {
         setSlide(slide - 300);
-      } else if (e.changedTouches[0].clientX - touchStartX > 60) {
+      } else if (e.changedTouches[0].clientX - touchStartX > 50) {
         setSlide(slide + 300);
       }
     }
+  };
+
+  const clickStartHandler = (e) => {
+    setIsDragStart(true);
+    setTouchStartX(e.clientX);
+
+    setTouchMoveDistance(slide);
+  };
+  const clickMoveHandler = (e) => {
+    setTouchMoveDistance(slide + (e.clientX - touchStartX));
+  };
+  const clickEndHandler = (e) => {
+    setIsDragStart(false);
+    console.log(e.clientX - touchStartX);
+    if (
+      touchMoveDistance <= 0 &&
+      touchMoveDistance > (specialPriceLength - 1) * -300
+    ) {
+      if (e.clientX - touchStartX < -50) {
+        setSlide(slide - 300);
+      } else if (e.clientX - touchStartX > 50) {
+        setSlide(slide + 300);
+      }
+    }
+  };
+
+  const showCarListAddButtonHandler = () => {
+    setCarList(carList + 5);
+    const addCarList = data.slice(carList, carList + 5);
+    const copy = [...showList];
+    const newArr = copy.concat(addCarList);
+    setShowList(newArr);
+    console.log(newArr);
   };
 
   return (
@@ -119,14 +153,6 @@ function App() {
           ''
         )}
         <Box>
-          <button
-            onClick={() => {
-              setIsDragStart(false);
-              setTouchMoveDistance(touchMoveDistance + -300);
-            }}
-          >
-            오른쪽 (이지만 왼쪽으로가는중)
-          </button>
           <TitleBox>
             <Title>차량 리스트</Title>
           </TitleBox>
@@ -145,13 +171,18 @@ function App() {
             {specialPriceItem?.map((item, index) => {
               return (
                 <SlideBox
+                  key={index}
                   slideBoxWidth={slideBoxWidth}
                   onTouchStart={touchStartHandler}
                   onTouchMove={touchMoveHandler}
                   onTouchEnd={touchEndHandler}
-                >
-                  {index}
-                </SlideBox>
+                  onMouseDown={clickStartHandler}
+                  onMouseMove={clickMoveHandler}
+                  onMouseUp={clickEndHandler}
+                  onMouseLeave={(e) => {
+                    setIsDragStart(false);
+                  }}
+                ></SlideBox>
               );
             })}
           </SlideBoxContainer>
@@ -203,7 +234,7 @@ function App() {
             <div
               style={{ display: 'flex', flexDirection: 'column', gap: '32px' }}
             >
-              {data?.slice(0, carList).map((item) => {
+              {showList?.map((item) => {
                 return (
                   <CardBox
                     key={item.carClassId}
@@ -233,22 +264,8 @@ function App() {
           </div>
           <ButtonBox>
             {carList < data?.length ? (
-              <Button
-                onClick={() => {
-                  setCarList(carList + 5);
-                }}
-              >
-                더보기
-              </Button>
-            ) : (
-              <Button
-                onClick={() => {
-                  setCarList(5);
-                }}
-              >
-                더 없으니까 닫기
-              </Button>
-            )}
+              <Button onClick={showCarListAddButtonHandler}>더보기</Button>
+            ) : null}
           </ButtonBox>
         </Box>
       </Layout>
@@ -259,7 +276,6 @@ function App() {
 export default App;
 const SlideBoxContainer = styled.div`
   /* 박스 갯수마다 300px씩 */
-  /* width: 1000vw; */
   width: ${(props) =>
     `${
       props.specialPriceLength * props.slideBoxWidth +
@@ -275,8 +291,7 @@ const SlideBoxContainer = styled.div`
     props.isDragStart
       ? `translateX(${props.touchMoveDistance}px)`
       : `translateX(${props.slide}px)`};
-  /* transition: transform 1s; */
-  transition: ${(props) => (props.isDragStart ? '' : 'transform .5s')};
+  transition: ${(props) => (props.isDragStart ? '' : 'transform .3s')};
 
   gap: 20px;
 
@@ -284,9 +299,7 @@ const SlideBoxContainer = styled.div`
 `;
 const SlideBox = styled.div`
   background-color: blue;
-  /* width: 100vw; */
   min-width: ${(props) => `${props.slideBoxWidth}px`};
-
   height: 24vh;
   box-sizing: border-box;
 `;
@@ -318,7 +331,7 @@ const CardDesc = styled.div`
 `;
 const CardImage = styled.img`
   height: 130px;
-  background-color: aliceblue;
+  /* background-color: aliceblue; */
   margin: 0 auto;
 `;
 const CardBox = styled.div`
@@ -351,10 +364,9 @@ const Box = styled.div`
   width: 100%;
   max-width: 420px;
   padding: 24px;
-  background-color: yellowgreen;
+  /* background-color: yellowgreen; */
   position: relative;
   overflow: hidden;
-  /* overflow-x: auto; */
 `;
 const GlobalStyle = createGlobalStyle`
   body {
