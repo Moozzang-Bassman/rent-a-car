@@ -1,7 +1,7 @@
 import React from 'react';
 import { useEffect } from 'react';
 import styled from 'styled-components';
-function Modal({ setIsModalOpen, detailInfo }) {
+function Modal({ setIsModalOpen, detailInfo, isModalOpen }) {
   return (
     <Background
       onClick={() => {
@@ -9,6 +9,7 @@ function Modal({ setIsModalOpen, detailInfo }) {
       }}
     >
       <WhiteBox
+        isModalOpen={isModalOpen}
         onClick={(e) => {
           e.stopPropagation();
         }}
@@ -58,16 +59,24 @@ const Background = styled.div`
   position: fixed;
   background: rgba(0, 0, 0, 0.5);
   z-index: 5;
-  padding: 60px 36px;
+  /* padding: 60px 36px; */
   display: flex;
   justify-content: center;
+
   box-sizing: border-box;
 `;
 const WhiteBox = styled.div`
   background: white;
   position: relative;
-
+  height: 75%;
+  margin-top: 10vh;
   padding: 28px;
+  border-radius: 1rem;
+  /* transform: translateY(100vh); */
+
+  /* opacity: 1; */
+
+  transition: all 1s;
 
   overflow-y: auto;
   max-width: 260px;
