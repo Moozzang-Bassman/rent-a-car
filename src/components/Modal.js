@@ -1,5 +1,5 @@
 import React from 'react';
-import { useEffect } from 'react';
+
 import styled from 'styled-components';
 function Modal({ setIsModalOpen, detailInfo, isModalOpen }) {
   return (
@@ -22,12 +22,12 @@ function Modal({ setIsModalOpen, detailInfo, isModalOpen }) {
         <p>{detailInfo && detailInfo.gearbox}</p>
         <p>{detailInfo && detailInfo.capacity}인승</p>
         <h3>안전옵션</h3>
-        {detailInfo?.safetyOption.map((item) => {
-          return <p>{`-${item}`}</p>;
+        {detailInfo?.safetyOption.map((item, index) => {
+          return <p key={index}>{`-${item}`}</p>;
         })}
         <h3>편의옵션</h3>
-        {detailInfo?.additionalOption.map((item) => {
-          return <p>{`-${item}`}</p>;
+        {detailInfo?.additionalOption.map((item, index) => {
+          return <p key={index}>{`-${item}`}</p>;
         })}
         <XButton
           onClick={() => {
@@ -59,7 +59,6 @@ const Background = styled.div`
   position: fixed;
   background: rgba(0, 0, 0, 0.5);
   z-index: 5;
-  /* padding: 60px 36px; */
   display: flex;
   justify-content: center;
 
@@ -72,12 +71,7 @@ const WhiteBox = styled.div`
   margin-top: 10vh;
   padding: 28px;
   border-radius: 1rem;
-  /* transform: translateY(100vh); */
-
-  /* opacity: 1; */
-
   transition: all 1s;
-
   overflow-y: auto;
   max-width: 260px;
 `;
