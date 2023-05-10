@@ -71,6 +71,7 @@ const CarListBox = memo(function ({
           })}
         </div>
       </div>
+
       <ButtonBox>
         {carList < data?.length ? (
           <Button onClick={showCarListAddButtonHandler}>더 보기</Button>

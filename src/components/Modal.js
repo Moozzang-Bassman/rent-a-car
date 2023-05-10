@@ -14,13 +14,13 @@ function Modal({ setIsModalOpen, detailInfo, isModalOpen }) {
           e.stopPropagation();
         }}
       >
-        <img width="100%" src={detailInfo && detailInfo.carImage}></img>
+        <img width="100%" alt="" src={detailInfo && detailInfo.carImage}></img>
         <h3>{detailInfo && detailInfo.carClassName}</h3>
-        <p>{detailInfo && detailInfo.maker}</p>
-        <p>{detailInfo && detailInfo.carModel}</p>
-        <p>{detailInfo && detailInfo.fuel}</p>
-        <p>{detailInfo && detailInfo.gearbox}</p>
-        <p>{detailInfo && detailInfo.capacity}인승</p>
+        <p>{`제조사: ${detailInfo && detailInfo.carModel}`}</p>
+        <p>{`분류: ${detailInfo && detailInfo.maker}`}</p>
+        <p>{`연료: ${detailInfo && detailInfo.fuel}`}</p>
+        <p>{`변속방식: ${detailInfo && detailInfo.gearbox}`}</p>
+        <p>{`승차정원: ${detailInfo && detailInfo.capacity}`}인승</p>
         <h3>안전옵션</h3>
         {detailInfo?.safetyOption.map((item, index) => {
           return <p key={index}>{`-${item}`}</p>;
@@ -51,6 +51,7 @@ const XButton = styled.button`
   height: 28px;
   border: 2px solid;
   background-color: inherit;
+  cursor: pointer;
 `;
 
 const Background = styled.div`

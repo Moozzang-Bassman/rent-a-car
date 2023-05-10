@@ -22,10 +22,12 @@ function List() {
   const [detailInfo, setDetailInfo] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [showList, setShowList] = useState([]);
+  const [pageMount, setPageMount] = useState(false);
 
   const fetchData = async () => {
     try {
       const response = await axios.get('http://localhost:8080/carClasses');
+
       const newArr = response.data.map((item) => {
         return {
           ...item,
@@ -43,6 +45,7 @@ function List() {
   };
   useEffect(() => {
     fetchData();
+    setPageMount(true);
   }, []);
 
   const priceWithComma = (num) => {
@@ -145,7 +148,7 @@ function List() {
         ) : (
           ''
         )}
-        <Box>
+        <Box pageMount={pageMount}>
           <TitleBox>
             <Title>차량 리스트</Title>
           </TitleBox>
@@ -318,4 +321,7 @@ const Box = styled.div`
   background-color: #f7f8f9;
   position: relative;
   overflow: hidden;
+  transform: ${(props) => (props.pageMount ? `` : 'translateY(100vw)')};
+  opacity: ${(props) => (props.pageMount ? 1 : 0)};
+  transition: transform 0.3s, opacity 0.3s;
 `;
